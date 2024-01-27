@@ -1,50 +1,66 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const log = [];
-
 const app = express();
+const port = 3000;
 
-process.on('uncaughtException', function (err) {
-    console.log(err);
+const secondaries = [
+    '172.17.0.1:3001',
+    '172.17.0.1:3002',
+];
+
+app.use(bodyParser.json());
+
+const replicatedLog = [];
+
+app.post('/append', async (req, res) => {
+    const message = req.body.message;
+    replicatedLog.push(message);
+
+    const replicationPromises = secondaries.map(async (secondary) => {
+        try {
+            await replicateMessage(secondary, message);
+        } catch (error) {
+            console.error(`Error replicating to ${secondary}: ${error.message}`);
+        }
+    });
+
+    await Promise.all(replicationPromises);
+
+    res.send('ACK');
 });
 
-app.use(bodyParser.urlencoded({extended: false}));
-
-app.get('/add-message', (req, res, next) => {
-    res.send('<form action="/message" method="post"><input type="text" name="message" /><button type="submit">Send message</button></form>');
+app.get('/messages', (req, res) => {
+    res.json(replicatedLog);
 });
 
-app.post('/message', async (req, res, next) => {
-    if (!req.body.message) {
-        return;
-    }
-
-    log.push(req.body.message);
-
-    const url = 'http://172.17.0.1:3001/add-message'
-    const customHeaders = {
-        "Content-Type": "application/json",
-    }
-
+async function replicateMessage(secondaryIP, message) {
     try {
+        const url = `http://${secondaryIP}/replicate`;
+        console.log(`Attempting to replicate to ${url}`);
+
         const response = await fetch(url, {
-            method: "POST",
-            headers: customHeaders,
-            body: JSON.stringify({message: req.body.message}),
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
         });
-        const data = await response.json();
-        console.log(data);
-        return data;
+
+        const responseData = await response.json();
+        console.log(responseData);
+
+        if (response.ok && responseData.status === 'ACK') {
+            console.log(`Replication to ${url} successful`);
+        } else {
+            console.error(`Replication to ${url} failed: Unexpected response`);
+        }
     } catch (error) {
-        console.log(error);
-    } finally {
-        res.redirect('/');
+        console.error(`Error replicating to ${secondaryIP}: ${error.message}`);
+        throw error;
     }
+}
+
+app.listen(port, () => {
+    console.log(`Master server listening at http://localhost:${port}`);
 });
-
-app.get('/', (req, res, next) => {
-    res.send(`<p>${log.join(', ')}</p>`);
-})
-
-app.listen(3000);

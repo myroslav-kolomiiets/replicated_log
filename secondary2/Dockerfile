@@ -1,4 +1,4 @@
-# Dockerfile for Master
+# Dockerfile for Secondary
 FROM node:20-alpine
 
 WORKDIR /app
@@ -9,6 +9,6 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 3002
 
-CMD ["node", "master/app.js"]
+CMD ["node", "secondary2/app.js"]
