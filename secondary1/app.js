@@ -14,13 +14,15 @@ app.post('/replicate', (req, res) => {
 
     console.log(`Received replication request: ${message}`);
 
-    res.json({ status: 'ACK' });
+    setTimeout(() => {
+        res.json({status: 'ACK'});
+    }, 5000);
 });
 
 app.get('/replicated-messages', (req, res) => {
     res.json(replicatedLog);
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
     console.log(`Secondary1 server listening at http://localhost:${port}`);
 });
