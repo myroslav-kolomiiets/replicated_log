@@ -1,0 +1,13 @@
+{
+  "name": "replicated-log",
+  "version": "1.0.0",
+  "description": "Replicated Log",
+  "main": "",
+  "author": "Myroslav Kolomiiets",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dockerode": "^4.0.2",
+    "express": "^4.17.1"
+  }
+}

@@ -1,0 +1,35 @@
+version: '3'
+services:
+  master:
+    build:
+      context: .
+      dockerfile: master/Dockerfile
+    ports:
+      - '3000:3000'
+    networks:
+      - my_network
+    depends_on:
+      - secondary1
+      - secondary2
+
+  secondary1:
+    build:
+      context: .
+      dockerfile: secondary1/Dockerfile
+    ports:
+      - '3001:3001'
+    networks:
+      - my_network
+
+  secondary2:
+    build:
+      context: .
+      dockerfile: secondary2/Dockerfile
+    ports:
+      - '3002:3002'
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
