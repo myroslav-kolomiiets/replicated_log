@@ -10,17 +10,19 @@ const replicatedLog = [];
 
 app.post('/replicate', (req, res) => {
     const message = req.body.message;
-    replicatedLog.push(message);
+    const timestamp = req.body.timestamp;
+    replicatedLog.push({id: timestamp, text: message.text});
 
-    console.log(`Received replication request: ${message}`);
+    console.log(`Received replication request: timestamp: ${timestamp}, content ${message.text}`);
 
     setTimeout(() => {
         res.json({status: 'ACK'});
-    }, 5000);
+    }, 3000);
 });
 
 app.get('/replicated-messages', (req, res) => {
-    res.json(replicatedLog);
+    const orderedMessages = replicatedLog.sort((a, b) => a.id - b.id);
+    res.json(orderedMessages);
 });
 
 app.listen(port, () => {

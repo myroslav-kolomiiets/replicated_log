@@ -11,30 +11,39 @@ const secondaries = [
 
 app.use(bodyParser.json());
 
-const replicatedLog = [];
+const replicatedLog = new Map();
 
 app.post('/append', async (req, res) => {
     const message = req.body.message;
-    replicatedLog.push(message);
+    const writeConcern = req.body.w;
 
-    const replicationPromises = secondaries.map(async (secondary) => {
-        try {
-            await replicateMessage(secondary, message);
-        } catch (error) {
-            console.error(`Error replicating to ${secondary}: ${error.message}`);
-        }
-    });
+    if (!replicatedLog.has(message)) {
+        const timestamp = new Date().getTime();
+        const messageInfo = {id: timestamp, text: message};
+        replicatedLog.set(message, messageInfo);
 
-    await Promise.all(replicationPromises);
+        const replicationPromises = secondaries.map(async (secondary) => {
+            try {
+                await replicateMessage(secondary, messageInfo, timestamp);
+            } catch (error) {
+                console.error(`Error replicating to ${secondary}: ${error.message}`);
+            }
+        });
 
-    res.send('ACK');
+        await Promise.all(replicationPromises.slice(0, writeConcern - 1));
+        res.send('ACK');
+    } else {
+        console.log(`Duplicate message: ${message}`);
+        res.send('Duplicate');
+    }
 });
 
 app.get('/messages', (req, res) => {
-    res.json(replicatedLog);
+    const orderedMessages = [...replicatedLog.values()].sort((a, b) => a.id - b.id);
+    res.json(orderedMessages);
 });
 
-async function replicateMessage(secondaryIP, message) {
+async function replicateMessage(secondaryIP, message, timestamp) {
     try {
         const url = `http://${secondaryIP}/replicate`;
         console.log(`Attempting to replicate to ${url}`);
@@ -44,7 +53,7 @@ async function replicateMessage(secondaryIP, message) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({message}),
+            body: JSON.stringify({message, timestamp}),
         });
 
         const responseData = await response.json();
