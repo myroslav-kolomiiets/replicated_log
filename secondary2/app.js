@@ -20,6 +20,14 @@ app.post('/replicate', (req, res) => {
     }, 10000);
 });
 
+// Додати новий обробник для хартбітів від мастера
+app.get('/health', (req, res) => {
+    const secondaryPort = req.query.port;
+    console.log('Received heartbeat from master');
+    res.send(secondaryPort);
+    console.log('Sent heartbeat to master');
+});
+
 app.get('/replicated-messages', (req, res) => {
     const orderedMessages = replicatedLog.sort((a, b) => a.id - b.id);
     res.json(orderedMessages);

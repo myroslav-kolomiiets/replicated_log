@@ -1,4 +1,10 @@
 # Replicated Log
 
-- to start run ```docker-compose up --build```
-- to stop run ```docker-compose down --volumes```
+#### Repo for home task from 'Distributed Systems and Cloud Service Development' course.
+
+
+To start cluster run:
+```docker-compose up --build```
+
+To stop cluster run:
+```docker-compose down --volumes```

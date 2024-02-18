@@ -1,13 +1,20 @@
 {
   "name": "replicated-log",
   "version": "1.0.0",
-  "description": "Replicated Log",
-  "main": "",
+  "description": "Replicated Log, home task from 'Distributed Systems and Cloud Service Development' course.",
+  "main": "master/app.js",
+  "scripts": {
+    "start": "node master/app.js",
+    "dev": "nodemon master/app.js"
+  },
   "author": "Myroslav Kolomiiets",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",
     "dockerode": "^4.0.2",
     "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
   }
 }
